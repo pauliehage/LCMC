@@ -1,0 +1,33 @@
+%% Process videos with DLC
+clear all
+conda.setenv('dlc')
+
+% set parameters to be passed to python script
+% indicate which monkey (where the config file is located)
+subj_folder = "/home/ijang/2_Subjects_Tongue/59d_Post_COVID-ijang-2020-09-30";
+% path to raw video
+vid_path = "/home/ijang/2_Subjects_Tongue";
+% vid
+vid_name = []; % optional
+if isempty(vid_name)
+    command = sprintf('ipython script.py %s, %s', subj_folder, data);
+else
+    command = sprintf('ipython script.py %s, %s', folder, data, vid_name);
+[~, cmdout] = system(command, '-echo');
+
+%% rename files produced
+files = dir('*filtered.csv');
+for id = 1:length(files)
+    [~, f] = fileparts(files(id).name);
+    p2 = f(1:13);
+    newname = p2 + "_labeled.csv"; 
+    movefile(files(id).name, newname);
+end
+%%
+files2 = dir('*labeled.mp4');
+for id = 1:length(files2)
+    [~, f] = fileparts(files2(id).name);
+    p2 = f(1:13);
+    newname = p2 + "_labeled.mp4";
+    movefile(files2(id).name, newname);
+end
