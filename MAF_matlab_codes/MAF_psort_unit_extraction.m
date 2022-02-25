@@ -98,9 +98,8 @@ for counter_rec = 1 : 1 : num_rec
 
     end
 
-    median_file = dir([path_to_sort '*_median.h5']);
-
-    median = h5read([path_to_sort median_file.name],'/ch_data');
+    median_file = dir([path_to_analyzed '*_median.h5']);
+    median = h5read([path_to_analyzed median_file.name],'/ch_data');
 
     for counter_ch = 1:n_ch
         if flag(counter_ch) == 1

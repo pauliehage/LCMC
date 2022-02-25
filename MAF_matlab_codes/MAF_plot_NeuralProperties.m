@@ -68,30 +68,35 @@ if not(isnan(cs_wave))
     n_ch = size(cs_wave,1);
     n_sig = length(cs_wave);
     wave_ch = DB.waveform.cs_wave_ch;
-elseif not(isnan(ss_wave))
-    n_ch = size(ss_wave,1);
-    n_sig = length(ss_wave);
-    wave_ch = DB.waveform.ss_wave_ch;
-end
 
-x = x_(wave_ch+1);
-y = y_(wave_ch+1);
-ch_num = DB.waveform.ch_map.map(wave_ch+1);
+    x = x_(wave_ch+1);
+    y = y_(wave_ch+1);
+    ch_num = DB.waveform.ch_map.map(wave_ch+1);
 
-span_ind = (0:n_sig-1)/sample_rate;
-span_group_ = repmat([span_ind,nan],n_ch,1);
-span_group = reshape((span_group_*1e3+x)',1,n_ch*(n_sig+1));
+    span_ind = (0:n_sig-1)/sample_rate;
+    span_group_ = repmat([span_ind,nan],n_ch,1);
+    span_group = reshape((span_group_*1e3+x)',1,n_ch*(n_sig+1));
 
-if not(isnan(ss_wave))
-    ss_wave_ = [ss_wave, nan(n_ch,1)];
-    ss_wave_group = reshape((ss_wave_+y)',1,n_ch*(n_sig+1));
-    plot(span_group, ss_wave_group, '-b', 'linewidth', 2)
-end
-
-if not(isnan(cs_wave))
     cs_wave_ = [cs_wave, nan(n_ch,1)];
     cs_wave_group = reshape((cs_wave_+y)',1,n_ch*(n_sig+1));
     plot(span_group, cs_wave_group, '-r', 'linewidth', 2);
+end
+if not(isnan(ss_wave))
+    n_ch = size(ss_wave,1);
+    n_sig = length(ss_wave);
+    wave_ch = DB.waveform.ss_wave_ch;
+
+    x = x_(wave_ch+1);
+    y = y_(wave_ch+1);
+    ch_num = DB.waveform.ch_map.map(wave_ch+1);
+
+    span_ind = (0:n_sig-1)/sample_rate;
+    span_group_ = repmat([span_ind,nan],n_ch,1);
+    span_group = reshape((span_group_*1e3+x)',1,n_ch*(n_sig+1));
+
+    ss_wave_ = [ss_wave, nan(n_ch,1)];
+    ss_wave_group = reshape((ss_wave_+y)',1,n_ch*(n_sig+1));
+    plot(span_group, ss_wave_group, '-b', 'linewidth', 2)
 end
 
 ch_map = arrayfun(@num2str, ch_num+1,'UniformOutput', 0);

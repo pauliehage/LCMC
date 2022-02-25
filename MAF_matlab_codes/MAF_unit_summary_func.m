@@ -13,11 +13,7 @@ unit_summary.ch_map           = Neural_Properties.waveform.ch_map;
 
 % Cross/Auto-Corr
 unit_summary.ss.corr          = Neural_Properties.Corr_data_SS_SSxSS_AUTO;
-if(length(unit_summary.ss.corr) ==1) 
-   unit_summary.ss.corr   = unit_summary.ss.corr .* ones(1,100);
-else
-    unit_summary.ss.corr(end/2)   = nan;
-end
+unit_summary.ss.corr(end/2)   = nan;
 unit_summary.ss.corr_span     = Neural_Properties.Corr_data_SS_inds_span;
 unit_summary.cs.corr          = Neural_Properties.Corr_data_CS_CSxSS_AUTO;
 unit_summary.cs.corr_span     = Neural_Properties.Corr_data_CS_inds_span;
@@ -84,7 +80,7 @@ if not(isempty(LICKS_ALL_DATA))
     else
         alignment = 'onset';
     end
-    bout_data_dir = funcs.buildBoutData(LICKS_ALL_DATA, alignment, params, funcs);
+    bout_data_dir = buildBoutData(LICKS_ALL_DATA, alignment, params, funcs);
     % left, groom, right
     bout_order = [2,3,1];
     for counter_dir = 1:3
@@ -109,7 +105,7 @@ if not(isempty(LICKS_ALL_DATA))
     else
         alignment = 'onset';
     end
-    bout_data_dir = funcs.buildBoutData(LICKS_ALL_DATA, alignment, params, funcs);
+    bout_data_dir = buildBoutData(LICKS_ALL_DATA, alignment, params, funcs);
     % left, groom, right
     bout_order = [2,3,1];
     for counter_dir = 1:3

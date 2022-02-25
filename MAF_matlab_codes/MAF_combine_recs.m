@@ -219,7 +219,7 @@ fprintf(' --> Completed. \n')
 params.cell_name    = cell_name;
 params.duration     = Neural_Properties.SS_duration;
 params.num_trials   = nansum(cell2mat(EXPERIMENT_PARAMS.num_trials));
-fprintf([cell_name ': Saving neural properties plot ...'])
+fprintf([cell_name ': Saving .png plot ...'])
 MAF_plot_NeuralProperties(Neural_Properties, params)
 hFig_ = gcf;
 figs_path = [sess_path 'units' filesep cell_name filesep...
@@ -234,7 +234,7 @@ params.cell_name    = cell_name;
 params.duration     = Neural_Properties.SS_duration;
 params.sac_tag_list = EXPERIMENT_PARAMS.sac_tag_list{1};
 params.num_trials   = nansum(cell2mat(EXPERIMENT_PARAMS.num_trials));
-fprintf([cell_name ': Saving saccade sorter plot ...'])
+fprintf([cell_name ': Saving .png plot ...'])
 ESN_plot_sac_sorter(SACS_ALL_DATA, params)
 hFig_ = gcf;
 figs_path = [sess_path 'units' filesep cell_name filesep...
@@ -249,7 +249,7 @@ if exist('LICKS_ALL_DATA','var')
     params.cell_name    = cell_name;
     params.duration     = Neural_Properties.SS_duration;
     params.lick_tag_list = EXPERIMENT_PARAMS.lick_tag_list{1};
-    fprintf([cell_name ': Saving lick sorter plot ...'])
+    fprintf([cell_name ': Saving .pdf plot ...'])
     PGH_plot_lick_sorter(LICKS_ALL_DATA, params)
     hFig_ = gcf;
     figs_path = [sess_path 'units' filesep cell_name filesep...

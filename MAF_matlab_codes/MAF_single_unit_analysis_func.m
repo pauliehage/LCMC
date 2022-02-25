@@ -8,7 +8,7 @@ tic;
 
 path_data_monkey_sorted = 'data_125d';
 
-session_list = {'2021-11-04'};
+session_list = {'2021-11-17'};
 
 if strcmp(session_list{1}, 'all')
     session_list = dir([path_data_monkey_sorted filesep '20*' filesep '20*']);
@@ -98,26 +98,27 @@ funcs.add_ephys_lick_sorter = @PGH_add_ephys_lick_sorter;
 funcs.lick_cs_on_analysis   = @PGH_CS_on_analysis;
 funcs.buildLickData         = @PGH_buildLickData;
 funcs.buildBoutData         = @PGH_buildBoutData;
-funcs.freq_analysis         = @PGH_freq_analysis;                                               
+
 funcs.unit_summary_func     = @MAF_unit_summary_func;
 
 
 %% Reorganize Files
-%reorganize_files(path_data_monkey_sorted, session_list, params, funcs);
+% reorganize_files(path_data_monkey_sorted, session_list, params, funcs);
 
 %% Spike Sorting
-%sorter(path_data_monkey_sorted, session_list, params, funcs); % this func sorts
+% sorter(path_data_monkey_sorted, session_list, params, funcs); % this func sorts
 
-%% Behavior Analy1sis
-%sac_analysis(path_data_monkey_sorted, session_list, params, funcs); % this func converts and runs sac_sorter on each recording .fhd files
-%recalibrate(path_data_monkey_sorted, session_list, params, funcs); % this func recalibrates the tracking
+%% Behavior Analysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% eye %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% sac_analysis(path_data_monkey_sorted, session_list, params, funcs); % this func converts and runs sac_sorter on each recording .fhd files
+% recalibrate(path_data_monkey_sorted, session_list, params, funcs); % this func recalibrates the tracking
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% tongue %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%DLC_analysis(path_data_monkey_sorted, session_list, params, funcs); % this func analyzes videos and produces csv files
+% DLC(path_data_monkey_sorted, session_list, params, funcs); % this func analyzes videos and produces csv files
 lick_analysis(path_data_monkey_sorted, session_list, params,funcs); % this func runs lick_sorter and produces LICKS_ALL data from .csv files
 
 %% MetaData
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% meta data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%generate_session_meta_data(path_data_monkey_sorted, session_list, params, funcs); % this func creates metadata
+generate_session_meta_data(path_data_monkey_sorted, session_list, params, funcs); % this func creates metadata
 
 %% Unit Extraction
 unit_extraction(path_data_monkey_sorted, session_list, params, funcs); % this func extracts units from sorter results
@@ -138,17 +139,17 @@ lick_neuro_modulation(path_data_monkey_sorted, session_list, params, funcs); % t
 generate_rec_units_summary(path_data_monkey_sorted, session_list, params, funcs); % this function generates rec units summary and metadata
 MAF_bundling_app(path_data_monkey_sorted, session_list{1}, params, funcs); % opens bundling app for the specified session
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% eye %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%combine_bundle_files(path_data_monkey_sorted, session_list, params, funcs);
+% combine_bundle_files(path_data_monkey_sorted, session_list, params, funcs);
 %% Summary App
-%extract_cell_interactions(path_data_monkey_sorted, session_list);
-%MAF_neuromodulation_app(path_data_monkey_sorted, session_list{1});
+% extract_cell_interactions(path_data_monkey_sorted, session_list);
+% MAF_neuromodulation_app(path_data_monkey_sorted, session_list{1},params,funcs);
 
 toc
 
 end
 
 %% function reorganize files
-function reorganize_files(path_data_monkey_sorted, sess_list, params, funcs)
+function reorganize_files(path_data_monkey_sorted, sess_list, params)
 
 if ~strcmp(path_data_monkey_sorted(end), filesep)
     path_data_monkey_sorted = [path_data_monkey_sorted filesep];
@@ -172,7 +173,7 @@ for counter_sess = 1 : 1 : num_sess
         current_rec = rec_list{counter_rec};
         fprintf(['      ', num2str(counter_rec), ' / ' num2str(num_rec) ' rec ', current_rec ' \n']);
         rec_path = [sess_path current_rec filesep];
-        funcs.file_sorter(rec_path, params, funcs);
+        func.file_sorter(rec_path, params, func);
     end
 
 end
@@ -264,7 +265,7 @@ for counter_sess = 1 : 1 : num_sess
         end
 
         try
-            % Analyze with Sac_Sorter
+        % Analyze with Sac_Sorter
             flag_figure = true;
             [SACS_ALL_DATA, TRIALS_DATA, EXPERIMENT_PARAMS] = ...
                 funcs.monkey_behavior_sac([path_to_fhd, fhd_name '.mat'], flag_figure, params, funcs);
@@ -396,10 +397,6 @@ end
 fprintf('### ALL DONE. ###\n')
 end
 
-%% function DLC_analysis
-function DLC_analysis(path_data_monkey_sorted, session_list, params, funcs)
-
-end
 %% function lick_analysis
 function lick_analysis(path_data_monkey_sorted, sess_list, params, funcs)
 
@@ -422,7 +419,7 @@ for counter_sess = 1 : 1 : num_sess
     for counter_rec = 1 : 1 : num_rec
         current_rec = rec_list{counter_rec};
         fprintf(['      ', num2str(counter_rec), ' / ' num2str(num_rec) ' Analyzing rec ', current_rec ' ']);
-
+       
         % try to find DLC csv file
         path_to_csv = [sess_path, current_rec, filesep, 'analyzed_data',...
             filesep, 'behavior_data',filesep, 'tongue', filesep];
@@ -438,7 +435,7 @@ for counter_sess = 1 : 1 : num_sess
         end
 
         csv_name = csv_file(1).name;
-        [~,csv_name,~] = fileparts(csv_name);
+        [~,csv_name,~] = fileparts(csv_name);   
 
         % Convert to mat if not converted
         if isempty(dir([path_to_csv, csv_name, '.mat']))
@@ -461,6 +458,8 @@ for counter_sess = 1 : 1 : num_sess
         % Save _ANALYZED.mat Data to disk
         save([path_to_analyzed_tongue csv_name(1:13) '_ANALYZED.mat'], ...
             'EXPERIMENT_PARAMS', 'LICKS_ALL_DATA', '-v7.3');
+
+      
 
         if flag_figure
             path_to_analyzed_tongue = [sess_path, current_rec, filesep, 'analyzed_figs', filesep, ...
@@ -679,7 +678,7 @@ for counter_sess = 1 : 1 : num_sess
         path_to_raw = [sess_path, current_rec, filesep, 'raw_data', filesep];
         path_to_save = [sess_path current_rec filesep 'analyzed_data'...
             filesep 'behavior_data' filesep 'tongue' filesep];
-
+        
         rec_name = regexprep(current_rec(3:end),'-','');
 
         PGH_event_alignment_LED(path_to_raw, path_to_save, rec_name);
@@ -869,7 +868,7 @@ for counter_sess = 1 : 1 : num_sess
     sess_path = [path_data_monkey_sorted, current_sess(1:7), filesep, current_sess, filesep];
 
     if exist([sess_path 'units'],'dir')
-        %         rmdir([sess_path 'units'],'s');
+        rmdir([sess_path 'units'],'s');
     end
 
     sess_name = regexprep(current_sess(3:end),'-','');
@@ -963,7 +962,7 @@ for counter_sess = 1 : 1 : num_sess
             path_to_unit_lick = [path_to_units, ...
                 rec_name, '_', unit_name, filesep, ...
                 rec_name, '_', unit_name, '_lick.mat'];
-
+            
             data_recording = load(path_to_unit_sac, ...
                 'SACS_ALL_DATA', 'Neural_Properties', 'EXPERIMENT_PARAMS');
 
@@ -1094,7 +1093,7 @@ for counter_sess = 1 : 1 : num_sess
                 continue;
             end
 
-            % 1: ss1xss2, 2: ss1xcs2, 3: cs1xss2, 4: cs1xcs2
+            % 1: ss1xss2, 2: ss1xcs2, 3: cs1xss2, 4: cs1xcs2 
             cross_prob{counter_cells1,counter_cells2} = nan(5,cross_len+1);
 
             shared_recs_ind = find(shared_recs);
