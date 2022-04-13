@@ -88,19 +88,49 @@ try
     movefile([path_to_raw_data, labeled_csv_file_name '_DLC.csv'],[path_to_analyzed_tongue,labeled_csv_file_name '_DLC.csv' ]);
 end
 
+% fix raw video names
+try
+    temp_avi_file = dir([path_to_raw_data,'*.avi']);
+    temp_avi_file_name = temp_avi_file.name;
+    if length(temp_avi_file_name) >= 24
+        temp_avi_file_name_new = [temp_avi_file_name(12:13) temp_avi_file_name(6:9) '_' temp_avi_file_name(14:19) ];
+        movefile([path_to_raw_data, temp_avi_file_name],[path_to_raw_data,temp_avi_file_name_new '.avi' ]);
+    else
+        avi_file = dir([path_to_raw_data,'*.avi']);
+        avi_file_name = avi_file.name;
+        avi_file_name_new = avi_file_name(1:13);
+        movefile([path_to_raw_data, avi_file_name],[path_to_raw_data,avi_file_name_new '.avi' ]);
+    end
+end
+try
+    temp_mp4_file = dir([path_to_raw_data,'*.mp4']);
+    temp_mp4_file_name = temp_mp4_file.name;
+    if length(temp_mp4_file_name) >= 24
+        temp_mp4_file_name_new = [temp_mp4_file_name(12:13) temp_mp4_file_name(6:9) '_' temp_mp4_file_name(14:19) ];
+        movefile([path_to_raw_data, temp_mp4_file_name],[path_to_raw_data,temp_mp4_file_name_new '.mp4' ]);
+    else
+        mp4_file = dir([path_to_raw_data,'*.mp4']);
+        mp4_file_name = mp4_file.name;
+        mp4_file_name_new = mp4_file_name(1:13);
+        movefile([path_to_raw_data, mp4_file_name],[path_to_raw_data, mp4_file_name_new, '.mp4']);
+    end
+end
+
 % delete reevaluated .csv from raw files
 try
        delete([path_to_raw_data,'*_Revaluated*']);
-
 end
 
 % delete existing converted DLC mat file from analyzed tongue
+delete_DLC_mat = 0;
+if delete_DLC_mat == 1
 try
     delete([path_to_analyzed_tongue,'*DLC.mat']);
 end
+end
 
 % delete existing _video metadata file
-delete_video_metadata = 1;
+delete_video_metadata = 0;
 if delete_video_metadata == 1
     try
         delete([path_to_analyzed_tongue,'*_video.mat']);

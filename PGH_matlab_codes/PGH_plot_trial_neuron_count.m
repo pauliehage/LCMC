@@ -1,0 +1,145 @@
+%% MASTER FUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% function MAF_single_unit_analysis
+function PGH_plot_trial_neuron_count
+%% Params
+clc; clear; close all;
+tic;
+
+path_data_monkey_sorted = 'data_59d';
+
+session_list = {'all'};
+
+if strcmp(session_list{1}, 'all')
+    session_list = dir([path_data_monkey_sorted filesep '20*' filesep '20*']);
+    session_list([session_list.isdir] == 0) = [];
+    session_list = {session_list.name};
+end
+
+[num_trial_sess,num_unit_sess, probe_type_sess] = build_trial_neuron_count(path_data_monkey_sorted, session_list);
+plot_trial_neuron_count(num_trial_sess,num_unit_sess, probe_type_sess);
+end
+
+%% function build_trial_neuron_count
+function [num_trial_sess, num_unit_sess, probe_type_sess] = build_trial_neuron_count(path_data_monkey_sorted, sess_list)
+
+if ~strcmp(path_data_monkey_sorted(end), filesep)
+    path_data_monkey_sorted = [path_data_monkey_sorted filesep];
+end
+
+num_sess = length(sess_list);
+num_trial_sess = nan(num_sess,1);
+num_unit_sess = nan(num_sess,1);
+probe_type_sess = nan(num_sess,1);
+% Loop over sessions
+for counter_sess = 1 : 1 : num_sess
+    current_sess = sess_list{counter_sess};
+    fprintf(['### ' 'sess ', current_sess, ' no. ', num2str(counter_sess), ' / ' num2str(num_sess) ' ### \n']);
+    sess_path = [path_data_monkey_sorted, current_sess(1:7), filesep, current_sess, filesep];
+    path_to_units = [sess_path 'units' filesep];
+
+    % Load session trial count and electrode type from session meta dat
+    session_meta_data_name_ = dir([sess_path '*.xls']);
+    session_meta_data_name = session_meta_data_name_.name;
+    session_meta_data = readtable([sess_path session_meta_data_name]);
+
+    num_trial_sess(counter_sess,1) = sum(session_meta_data.num_trial);
+    probe_type_sess(counter_sess,1) = session_meta_data.elec(1);
+
+    % Count number of units from rec unit summary
+    session_rec_unit_summary_name_ = dir([path_to_units '*.mat']);
+    session_rec_unit_summary_name = session_rec_unit_summary_name_.name;
+    session_rec_unit_summary = load([path_to_units session_rec_unit_summary_name]);
+
+    num_unit_sess(counter_sess,1) = length(session_rec_unit_summary.cell_ids);
+
+
+end
+fprintf('### ALL DONE. ###\n')
+end
+
+%% function plot_trial_neuron_count
+function plot_trial_neuron_count(num_trial_sess,num_unit_sess, probe_type_sess)
+fprintf('Plotting ...');
+
+% silicon array
+is_sa = probe_type_sess == 1 | probe_type_sess == 2;
+num_sess_sa = sum(is_sa);
+
+num_trial_sa = sum(num_trial_sess(is_sa));
+mean_num_trial_sa = mean(num_trial_sess(is_sa));
+std_num_trial_sa = std(num_trial_sess(is_sa));
+se_num_trial_sa = std_num_trial_sa/sqrt(num_sess_sa);
+
+num_unit_sa = sum(num_unit_sess(is_sa));
+mean_num_unit_sa = mean(num_unit_sess(is_sa));
+std_num_unit_sa = std(num_unit_sess(is_sa));
+se_num_unit_sa = std_num_unit_sa/sqrt(num_sess_sa);
+
+% hept/tet
+is_ht = probe_type_sess == 3 | probe_type_sess == 4;
+num_sess_ht = sum(is_ht);
+
+num_trial_ht = sum(num_trial_sess(is_ht));
+mean_num_trial_ht = mean(num_trial_sess(is_ht));
+std_num_trial_ht = std(num_trial_sess(is_ht));
+se_num_trial_ht = std_num_trial_ht/sqrt(num_sess_ht);
+
+num_unit_ht = sum(num_unit_sess(is_ht));
+mean_num_unit_ht = mean(num_unit_sess(is_ht));
+std_num_unit_ht = std(num_unit_sess(is_ht));
+se_num_unit_ht = std_num_unit_ht/sqrt(num_sess_ht);
+
+% combinded
+num_sess_all = num_sess_ht + num_sess_sa;
+
+num_trial_all = num_trial_ht + num_trial_sa;
+mean_num_trial_all = mean(num_trial_sess);
+std_num_trial_all = std(num_trial_sess);
+se_num_trial_all = std_num_trial_all/sqrt(num_sess_all);
+
+num_unit_all = num_unit_ht + num_unit_sa;
+
+% extract num_unit_sess_type
+num_unit_sess_sa = num_unit_sess;
+num_unit_sess_sa(~is_sa) = nan;
+
+num_unit_sess_ht = num_unit_sess;
+num_unit_sess_ht(~is_ht) = nan;
+
+x_axis_session = 1:num_sess_all;
+fig = figure;
+fig.WindowState = 'maximized';
+subplot(3,1,1)
+bar(x_axis_session, num_trial_sess)
+xlabel('Recording session')
+ylabel('Number of correct trials')
+xlim([0 length(num_trial_sess)+1])
+xticks(1:1:length(num_trial_sess))
+ylim([0 3000])
+
+subplot(3,1,2)
+yticks(nan)
+yyaxis right;
+plot(x_axis_session,num_unit_sess_sa, 'o-')
+xlim([0 length(num_trial_sess)+1])
+ylim([0 120])
+xticks(1:1:length(num_trial_sess))
+ylabel('Number of neurons: silicon array')
+
+subplot(3,1,3)
+yticks(nan)
+yyaxis right;
+plot(x_axis_session,num_unit_sess_ht, 'o-')
+xlim([0 length(num_trial_sess)+1])
+ylim([0 15])
+xticks(1:1:length(num_trial_sess))
+ylabel('Number of neurons: tetrode/heptode')
+
+sgtitle([ num2str(num_sess_all) ' sessions (' num2str(num_sess_sa) ' SA, ' num2str(num_sess_ht) ' H/T) | ' num2str(num_trial_all) ' trials (' num2str(mean_num_trial_all) '+/-' num2str(se_num_trial_all) ') | ' num2str(num_unit_all) ' units (' num2str(num_unit_sa) '; ' num2str(mean_num_unit_sa) '+/-' num2str(se_num_unit_sa) ' SA, ' num2str(num_unit_ht) '; ' num2str(mean_num_unit_ht) '+/-' num2str(se_num_unit_ht) ' H/T)']);
+
+ESN_Beautify_Plot
+fprintf('### ALL DONE. ###\n')
+
+end
+

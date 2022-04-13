@@ -1,4 +1,4 @@
-%% Produces LICKS_ALL_DATA and EXPERIMENT_PARAMS
+                                                                                                                                                                                                                                                                                                                                                             %% Produces LICKS_ALL_DATA and EXPERIMENT_PARAMS
 function [LICKS_ALL_DATA, EXPERIMENT_PARAMS] = PGH_monkey_behavior_lick(mat_file_address, flag_figure, params, funcs)
 %% Get file_name and file_path
 
@@ -66,7 +66,7 @@ dir_FPS = dir([path_name, '*_video.mat']);
 if ~isempty(dir_FPS)
     load([path_name dir_FPS(1).name],'FPS', 'height', 'width', 'duration', 'num_frames')
 else
-    fprintf('FPS not found, computing now ...')
+    fprintf('FPS not found, computing now ... \n')
     [LED_FPS, FPS, height, width, duration, num_frames] = PGH_estimate_vid_fps(path_to_raw_data,flag_figure, 30, 150, 1);
     save([path_name datehour '_video.mat'],'FPS','LED_FPS', 'height', 'width', 'duration', 'num_frames');
     saveas(gcf,[path_to_analyzed_figs_tongue  datehour '_FPS'], 'pdf');
@@ -119,7 +119,6 @@ function [LICKS_ALL_DATA, EXPERIMENT_PARAMS] = build_LICKS_ALL_DATA(DLC, EXPERIM
 fprintf(['Building LICK_DATA_ALL: ' EXPERIMENT_PARAMS.mat_FileName ' ... ' '\n'])
 clearvars -except DLC EXPERIMENT_PARAMS LICKS_ALL_DATA flag_figure params funcs;
 %% Build tag and lick_tag_list
-
 lick_tag_list = params.lick.tag_name_list;
 
 is_groom= logical(DLC.CLASS.is_grooming_lick);
@@ -132,16 +131,15 @@ is_bout_end = ismember(DLC.IND.ind_lick_onset ,DLC.IND.ind_lick_onset_end_bout);
 is_harvest_start = ismember(DLC.IND.ind_lick_onset ,DLC.IND.ind_lick_onset_str_harvest);
 is_harvest_end = ismember(DLC.IND.ind_lick_onset ,DLC.IND.ind_lick_onset_end_harvest);
 
-
 tag(is_groom) = 1;
 tag(is_inner_tube_success) = 2;
 tag(is_inner_tube_fail) = 3;
 tag(is_outer_tube_success) = 4;
 tag(is_outer_tube_fail) = 5;
-tag(is_bout_start) = 6;
-tag(is_bout_end) = 7;
 tag(is_harvest_start) = 8;
 tag(is_harvest_end) = 9;
+tag(is_bout_start) = 6;
+tag(is_bout_end) = 7;
 
 LICKS_ALL_DATA.tag = tag;
 EXPERIMENT_PARAMS.lick_tag_list = lick_tag_list;
@@ -364,12 +362,15 @@ LICKS_ALL_DATA.ltube_l_py_offset = DLC.KINEMATIC.l_tube_l_y_offset;
 
 %% Build reward-tube capacity
 % rew capacity
-LICKS_ALL_DATA.rew_capacity_r = DLC.FOOD.r_tube_food_lick';
-LICKS_ALL_DATA.rew_capacity_l = DLC.FOOD.l_tube_food_lick';
+LICKS_ALL_DATA.rew_capacity_r_lick_onset = DLC.FOOD.r_tube_food_lick_onset';
+LICKS_ALL_DATA.rew_capacity_r_lick_offset = DLC.FOOD.r_tube_food_lick_offset';
+LICKS_ALL_DATA.rew_capacity_l_lick_onset = DLC.FOOD.l_tube_food_lick_onset';
+LICKS_ALL_DATA.rew_capacity_l_lick_offset = DLC.FOOD.l_tube_food_lick_offset';
 
-
-
-
+LICKS_ALL_DATA.rew_capacity_r_bout_start = DLC.FOOD.r_tube_food_bout_start';
+LICKS_ALL_DATA.rew_capacity_r_bout_end = DLC.FOOD.r_tube_food_bout_end';
+LICKS_ALL_DATA.rew_capacity_l_bout_start = DLC.FOOD.l_tube_food_bout_start';
+LICKS_ALL_DATA.rew_capacity_l_bout_end = DLC.FOOD.l_tube_food_bout_end';
 end
 
 %% MAIN Function: Plot lick sorter summary
@@ -435,26 +436,32 @@ l_tube_r_y = scale(2)*data_1K(:,22);
 l_tube_l_x = scale(2)*data_1K(:,23);
 l_tube_l_y = scale(2)*data_1K(:,24);
 
-% find origin, shift, and rotate DLC data
-[~, cent_cluster_x] = kmeans(tip_tongue_x, 3);
-[~, cent_cluster_y] = kmeans(tip_tongue_y, 3);
-[x0, ind_min] = min(cent_cluster_x);
-if x0 < (mean(r_nose_x) + mean(l_nose_x))/2
-    [~, ind_max] = max(cent_cluster_x);
-    ind_mid = 1:3;
-    ind_mid(ind_max) = [];
-    ind_mid(ind_min) = [];
-    x0 = cent_cluster_x(ind_mid);
-end
+% find origin and shift DLC data
+% clustering approach
+% [~, cent_cluster_x] = kmeans(tip_tongue_x, 3);
+% [~, cent_cluster_y] = kmeans(tip_tongue_y, 3);
+% [x0, ind_min] = min(cent_cluster_x);
+% if x0 < (mean(r_nose_x) + mean(l_nose_x))/2
+%     [~, ind_max] = max(cent_cluster_x);
+%     ind_mid = 1:3;
+%     ind_mid(ind_max) = [];
+%     ind_mid(ind_min) = [];
+%     x0 = cent_cluster_x(ind_mid);
+% end
+% 
+% midpoint = (mean(r_nose_y) + mean(l_nose_y)) / 2;
+% if abs(cent_cluster_y(1) - midpoint) < abs(cent_cluster_y(2) - midpoint) && abs(cent_cluster_y(1) - midpoint) < abs(cent_cluster_y(3) - midpoint)
+%     y0 = cent_cluster_y(1);
+% elseif abs(cent_cluster_y(2) - midpoint) < abs(cent_cluster_y(1) - midpoint) && abs(cent_cluster_y(2) - midpoint) < abs(cent_cluster_y(3) - midpoint)
+%     y0 = cent_cluster_y(2);
+% else
+%     y0 = cent_cluster_y(3);
+% end
 
-midpoint = (mean(r_nose_y) + mean(l_nose_y)) / 2;
-if abs(cent_cluster_y(1) - midpoint) < abs(cent_cluster_y(2) - midpoint) && abs(cent_cluster_y(1) - midpoint) < abs(cent_cluster_y(3) - midpoint)
-    y0 = cent_cluster_y(1);
-elseif abs(cent_cluster_y(2) - midpoint) < abs(cent_cluster_y(1) - midpoint) && abs(cent_cluster_y(2) - midpoint) < abs(cent_cluster_y(3) - midpoint)
-    y0 = cent_cluster_y(2);
-else
-    y0 = cent_cluster_y(3);
-end
+% clustering approach
+% nose marker approach
+y0 = (mean(r_nose_y) + mean(l_nose_y)) / 2;
+x0 = (mean(r_nose_x) + mean(l_nose_x)) / 2 + 5;
 
 EXPERIMENT_PARAMS.duration_video = time_1K(end) - time_1K(1) ;
 DLC.POINTS.tip_tongue_x = tip_tongue_x - x0;
@@ -683,28 +690,61 @@ while bias > 0.1
     d_tip(d_tip < 0) = 0;
 end
 
+% remove first and last lick if it overlaps with start or end of d_tip
+ind_lick_onset(1) = [];
+ind_lick_offset(1) = [];
+ind_lick_onset(end) = [];
+ind_lick_offset(end) = [];
+
 % recalculate ind_lick_onset and ind_lick_offset using new d_tip
 % with bias removed
 for counter_lick = 1 : length(ind_lick_onset)
+    %     inds_ = ind_lick_onset(counter_lick) : ind_lick_offset(counter_lick);
+    shift_onset = 0;
+    shift_offset = 0;
+    shift_thresh = 5;
+    while d_tip(ind_lick_onset(counter_lick)) ~= 0        
+        shift_onset = shift_onset + 1;
+        if shift_onset > shift_thresh
+            ind_lick_onset(counter_lick) = ind_lick_onset(counter_lick) - shift_thresh;
+        else
+            ind_lick_onset(counter_lick) = ind_lick_onset(counter_lick) - shift_onset;
+        end
+    end
+    while d_tip(ind_lick_offset(counter_lick)) ~= 0
+        shift_offset = shift_offset + 1;
+        if shift_offset > shift_thresh
+            ind_lick_offset(counter_lick) = ind_lick_offset(counter_lick) + shift_thresh;
+        else
+            ind_lick_offset(counter_lick) = ind_lick_offset(counter_lick) + shift_offset;
+        end
+    end
     inds_ = ind_lick_onset(counter_lick) : ind_lick_offset(counter_lick);
-    if( ~isempty(inds_(find(d_tip(inds_) > 0, 1, 'first'))-1 ))
-        ind_lick_onset_new(counter_lick,1) = inds_(find(d_tip(inds_) > 0, 1, 'first'))-1;
-        ind_lick_offset_new(counter_lick,1) = inds_(find(d_tip(inds_) > 0, 1, 'last'))+1;
+    if length(inds_) > 1 && max(d_tip(inds_) ~= 0)
+    ind_lick_onset(counter_lick) = inds_(find(d_tip(inds_)> 0, 1, 'first') - 1);
+    ind_lick_offset(counter_lick) = inds_(find(d_tip(inds_)> 0, 1, 'last') + 1);
     else
-        continue;
+        ind_lick_onset(counter_lick) = nan;
+        ind_lick_offset(counter_lick) = nan;
     end
 end
 
-ind_lick_onset_0 = find(ind_lick_onset_new == 0);
-ind_lick_offset_0 = find(ind_lick_offset_new == 0);
+% detect duplicates and delete pair
+ind_duplicate = find(diff(ind_lick_onset) <= 0 | diff(ind_lick_offset) <= 0);
+ind_lick_onset(ind_duplicate) = nan;
+ind_lick_offset(ind_duplicate) = nan;
 
-if ~isempty(ind_lick_onset_0)
-    ind_lick_onset_new(ind_lick_onset_0) = [];
-    ind_lick_offset_new(ind_lick_onset_0) = [];
-end
+% remove invalid onset and offset
+ind_lick_onset(isnan(ind_lick_onset)) = [];
+ind_lick_offset(isnan(ind_lick_offset)) = [];
 
-ind_lick_onset = ind_lick_onset_new;
-ind_lick_offset = ind_lick_offset_new;
+% ind_lick_onset_0 = find(ind_lick_onset == 0);
+% ind_lick_offset_0 = find(ind_lick_offset == 0);
+% 
+% if ~isempty(ind_lick_onset_0)
+%     ind_lick_onset(ind_lick_onset_0) = [];
+%     ind_lick_offset(ind_lick_onset_0) = [];
+% end
 
 num_lick = length(ind_lick_onset);
 
@@ -712,16 +752,23 @@ time_lick_onset = time_1K(ind_lick_onset);
 time_lick_offset =  time_1K(ind_lick_offset);
 time_lick_duration = time_lick_offset - time_lick_onset;
 
-ind_lick_onset_str_bout_ = [1; find(diff(ind_lick_onset) >1000) + 1];
+% 1s threshold for lick bouts
+bout_threshold = 1000;
+ind_lick_onset_str_bout_ = [1; find(diff(ind_lick_onset) >bout_threshold) + 1];
 ind_lick_onset_str_bout = ind_lick_onset(ind_lick_onset_str_bout_);
-ind_lick_onset_end_bout_ = [find(diff(ind_lick_onset) >1000); length(ind_lick_onset)];
+ind_lick_onset_end_bout_ = [find(diff(ind_lick_onset) >bout_threshold); length(ind_lick_onset)];
 ind_lick_onset_end_bout = ind_lick_onset(ind_lick_onset_end_bout_);
+
+num_lick_bout = (ind_lick_onset_end_bout_ - ind_lick_onset_str_bout_) + 1;
+
+validity = num_lick_bout>=3;
+num_lick_bout(~validity) = [];
+ind_lick_onset_str_bout(~validity) = [];
+ind_lick_onset_end_bout(~validity) = [];
 
 time_lick_onset_str_bout = time_1K(ind_lick_onset_str_bout);
 time_lick_onset_end_bout = time_1K(ind_lick_onset_end_bout);
 time_bout_duration = time_lick_onset_end_bout - time_lick_onset_str_bout;
-
-num_lick_bout = (ind_lick_onset_end_bout_ - ind_lick_onset_str_bout_) + 1;
 
 num_bout = length(ind_lick_onset_str_bout);
 
@@ -1070,7 +1117,6 @@ time_v_lick_max_abs = time_1K(ind_v_lick_max);
 time_v_lick_max_rel = (time_v_lick_max_abs - time_lick_onset);
 time_v_lick_min_abs = time_1K(ind_v_lick_min);
 time_v_lick_min_rel = (time_v_lick_min_abs - time_lick_onset);
-
 
 DLC.KINEMATIC.d_tip = d_tip;
 DLC.KINEMATIC.d_lick = d_lick;
@@ -1604,6 +1650,9 @@ end
 function [DLC, EXPERIMENT_PARAMS] = quantify_food(DLC,EXPERIMENT_PARAMS, params, funcs)
 fprintf('Quantifying food in tube ...');
 num_lick = DLC.IND.num_lick;
+num_bout = DLC.IND.num_bout;
+ind_lick_onset_str_bout = DLC.IND.ind_lick_onset_str_bout;
+ind_lick_onset_end_bout = DLC.IND.ind_lick_onset_end_bout ; 
 ind_lick_onset = DLC.IND.ind_lick_onset;
 ind_lick_offset = DLC.IND.ind_lick_offset;
 
@@ -1635,9 +1684,24 @@ for counter_lick =  1 : 1 : num_lick
     ind_offset_(counter_lick) = DLC.IND.ind_lick_offset(counter_lick);
     for counter_inds_ = 1 : 1: length(inds_)
         r_tube_food_(counter_inds_) = r_tube_food(inds_(counter_inds_));
-        r_tube_food_lick(counter_lick, counter_inds_) = r_tube_food_(counter_inds_);
+        r_tube_food_lick_onset(counter_lick,1) = r_tube_food_(1) ;
+        r_tube_food_lick_offset(counter_lick,1) = r_tube_food_(end) ;
         l_tube_food_(counter_inds_) = l_tube_food(inds_(counter_inds_));
-        l_tube_food_lick(counter_lick, counter_inds_) = l_tube_food_(counter_inds_);
+        l_tube_food_lick_onset(counter_lick,1) = l_tube_food_(1) ;
+        l_tube_food_lick_offset(counter_lick,1) = l_tube_food_(end) ;
+
+    end
+end
+
+for counter_bout =  1 : 1 : num_bout
+    inds_ = ind_lick_onset_str_bout(counter_bout):ind_lick_onset_end_bout(counter_bout);
+    for counter_inds_ = 1 : 1: length(inds_)
+        r_tube_food_(counter_inds_) = r_tube_food(inds_(counter_inds_));
+        r_tube_food_bout_start(counter_bout, 1) = r_tube_food_(1);
+        r_tube_food_bout_end(counter_bout, 1) = r_tube_food_(end);
+        l_tube_food_(counter_inds_) = l_tube_food(inds_(counter_inds_));
+        l_tube_food_bout_start(counter_bout, 1) = l_tube_food_(1);
+        l_tube_food_bout_end(counter_bout, 1) = l_tube_food_(end);
     end
 end
 
@@ -1648,9 +1712,15 @@ DLC.FOOD.l_tube_food = l_tube_food;
 DLC.FOOD.l_food_x = l_food_x;
 DLC.FOOD.l_food_y = l_food_y;
 
-DLC.FOOD.r_tube_food_lick = r_tube_food_lick;
-DLC.FOOD.l_tube_food_lick = l_tube_food_lick;
+DLC.FOOD.r_tube_food_lick_onset = r_tube_food_lick_onset;
+DLC.FOOD.r_tube_food_lick_offset = r_tube_food_lick_offset;
+DLC.FOOD.l_tube_food_lick_onset = l_tube_food_lick_onset;
+DLC.FOOD.l_tube_food_lick_offset = l_tube_food_lick_offset;
 
+DLC.FOOD.r_tube_food_bout_start = r_tube_food_bout_start;
+DLC.FOOD.r_tube_food_bout_end = r_tube_food_bout_end;
+DLC.FOOD.l_tube_food_bout_start = l_tube_food_bout_start;
+DLC.FOOD.l_tube_food_bout_end = l_tube_food_bout_end;
 fprintf(' --> Completed. \n')
 end
 
@@ -1663,35 +1733,79 @@ time_1K = DLC.TIME.time_1K';
 ind_lick_onset = DLC.IND.ind_lick_onset;
 is_grooming_lick = DLC.CLASS.is_grooming_lick;
 ind_lick_onset_grooming = (ind_lick_onset(is_grooming_lick));
+ind_lick_onset_reward = (ind_lick_onset(~is_grooming_lick));
 ind_lick_onset_r_reward = DLC.CLASS.ind_lick_onset_r_reward;
 time_lick_onset_r_reward = DLC.TIME.time_lick_onset_r_reward;
-r_tube_food = DLC.FOOD.r_tube_food;
 ind_lick_onset_l_reward = DLC.CLASS.ind_lick_onset_l_reward;
 time_lick_onset_l_reward = DLC.TIME.time_lick_onset_l_reward;
+r_tube_food = DLC.FOOD.r_tube_food;
 l_tube_food = DLC.FOOD.l_tube_food;
 
 ind_lick_onset_str_bout = DLC.IND.ind_lick_onset_str_bout;
 ind_lick_onset_end_bout = DLC.IND.ind_lick_onset_end_bout;
-ind_lick_onset = ind_lick_onset(~is_grooming_lick);
-ind_lick_onset_str_harvest_ = [1; find(diff(ind_lick_onset) >1000) + 1];
-ind_lick_onset_str_harvest = ind_lick_onset(ind_lick_onset_str_harvest_);
-ind_lick_onset_end_harvest_ = [find(diff(ind_lick_onset) >1000); length(ind_lick_onset)];
-ind_lick_onset_end_harvest = ind_lick_onset(ind_lick_onset_end_harvest_);
 
-num_lick_harvest = (ind_lick_onset_end_harvest_ - ind_lick_onset_str_harvest_) + 1;
+% Check bouts that start or end with grooming lick
+% ind_lick_onset_str_bout_grooming = ismember(ind_lick_onset_str_bout, ind_lick_onset_grooming);
+% ind_lick_onset_end_bout_grooming = ismember(ind_lick_onset_end_bout, ind_lick_onset_grooming);
+
+for counter_bout = 1 : DLC.IND.num_bout
+    % harvest start
+    if isempty(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset_grooming,1))
+        ind_lick_onset_str_harvest(counter_bout,1) = ind_lick_onset_str_bout(counter_bout);
+    elseif ~isempty(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset_grooming,1))
+        shift_ind = 0;
+        bool_shift = 1;
+        while bool_shift == 1
+            if ~isempty(find(ind_lick_onset(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset,1) + shift_ind) == ind_lick_onset_grooming, 1)) && ...
+                    ind_lick_onset(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset,1) + shift_ind) ~= ind_lick_onset(end)
+                shift_ind = shift_ind + 1;
+            elseif isempty(find(ind_lick_onset(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset,1) + shift_ind) == ind_lick_onset_grooming, 1)) || ...
+                    ind_lick_onset(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset,1) + shift_ind) == ind_lick_onset(end)
+                    bool_shift = 0;
+            end
+        end
+          ind_lick_onset_str_harvest(counter_bout,1) = ind_lick_onset(find(ind_lick_onset_str_bout(counter_bout) == ind_lick_onset,1) + shift_ind);
+    end
+    % harvest end
+    if isempty(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset_grooming,1))
+        ind_lick_onset_end_harvest(counter_bout,1) = ind_lick_onset_end_bout(counter_bout);
+    elseif ~isempty(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset_grooming,1))
+        shift_ind = 0;
+        bool_shift = 1;
+        while bool_shift == 1
+            if ~isempty(find(ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) == ind_lick_onset_grooming, 1)) && ...
+                    ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) ~= ind_lick_onset_str_harvest(counter_bout) && ...
+                    ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) ~= ind_lick_onset(1)
+                shift_ind = shift_ind + 1;
+            elseif isempty(find(ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) == ind_lick_onset_grooming, 1)) || ...
+                     ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) == ind_lick_onset_str_harvest(counter_bout) || ...
+                ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind) == ind_lick_onset(1)    
+                bool_shift = 0;
+            end
+        end
+          ind_lick_onset_end_harvest(counter_bout,1) = ind_lick_onset(find(ind_lick_onset_end_bout(counter_bout) == ind_lick_onset,1) - shift_ind);
+    end
+end
+
+% Check harcest that start or end with grooming lick
+% ind_lick_onset_str_harvest_grooming = ismember(ind_lick_onset_str_harvest, ind_lick_onset_grooming);
+% ind_lick_onset_end_harvest_grooming = ismember(ind_lick_onset_end_harvest, ind_lick_onset_grooming);
+
+% Count number of licks in harvest
+for counter_harvest = 1 : length(ind_lick_onset_str_harvest)
+    inds_ = ind_lick_onset_str_harvest(counter_harvest) : ind_lick_onset_end_harvest(counter_harvest);
+    num_lick_harvest(counter_harvest,1) = length(find(inds_ == ind_lick_onset));
+end
+
+validity = num_lick_harvest>=3;
+num_lick_harvest(~validity) = [];
+ind_lick_onset_str_harvest(~validity) = [];
+ind_lick_onset_end_harvest(~validity) = [];
 
 time_lick_onset_str_harvest = time_1K(ind_lick_onset_str_harvest);
 time_lick_onset_end_harvest = time_1K(ind_lick_onset_end_harvest);
 time_harvest_duration = time_1K(ind_lick_onset_end_harvest) - ...
     time_1K(ind_lick_onset_str_harvest);
-
-inds_del_harvest = num_lick_harvest<3;
-num_lick_harvest(inds_del_harvest) = [];
-time_harvest_duration(inds_del_harvest) = [];
-ind_lick_onset_str_harvest(inds_del_harvest) = [];
-ind_lick_onset_end_harvest(inds_del_harvest) = [];
-time_lick_onset_str_harvest(inds_del_harvest) = [];
-time_lick_onset_end_harvest(inds_del_harvest) = [];
 
 % Determine direction of bouts
 num_r = [];
@@ -1722,34 +1836,12 @@ is_harvest_r = num_r > num_l;
 is_harvest_l = num_l > num_r;
 
 
-% time_r_harvest_duration = time_harvest_duration(ismember(ind_lick_onset_str_harvest,ind_lick_onset_r_reward));
-% time_l_harvest_duration = time_harvest_duration(ismember(ind_lick_onset_str_harvest,ind_lick_onset_l_reward));
-%
-% num_lick_r_harvest = num_lick_harvest(ismember(ind_lick_onset_str_harvest,ind_lick_onset_r_reward));
-% num_lick_l_harvest = num_lick_harvest(ismember(ind_lick_onset_str_harvest,ind_lick_onset_l_reward));
-
-% r_tube_food_str_harvest = r_tube_food(ind_lick_onset_str_harvest(ismember(ind_lick_onset_str_harvest,ind_lick_onset_r_reward)));
-% r_tube_food_end_harvest = r_tube_food(ind_lick_onset_end_harvest(ismember(ind_lick_onset_end_harvest,ind_lick_onset_r_reward)));
-% l_tube_food_str_harvest = l_tube_food(ind_lick_onset_str_harvest(ismember(ind_lick_onset_str_harvest,ind_lick_onset_l_reward)));
-% l_tube_food_end_harvest = l_tube_food(ind_lick_onset_end_harvest(ismember(ind_lick_onset_end_harvest,ind_lick_onset_l_reward)));
-
-% r_tube_food_consumed_harvest = r_tube_food_str_harvest - [r_tube_food_end_harvest;0;0];
-% l_tube_food_consumed_harvest = l_tube_food_str_harvest - l_tube_food_end_harvest;
-
 DLC.IND.ind_lick_onset_str_harvest = ind_lick_onset_str_harvest;
 DLC.IND.ind_lick_onset_end_harvest = ind_lick_onset_end_harvest;
 DLC.IND.num_lick_harvest = num_lick_harvest;
-% DLC.IND.num_lick_r_harvest = num_lick_r_harvest;
-% DLC.IND.num_lick_l_harvest = num_lick_l_harvest;
 DLC.TIME.time_lick_onset_str_harvest = time_lick_onset_str_harvest;
 DLC.TIME.time_lick_onset_end_harvest = time_lick_onset_end_harvest;
 DLC.TIME.time_harvest_duration = time_harvest_duration;
-% DLC.TIME.time_r_harvest_duration = time_r_harvest_duration;
-% DLC.TIME.time_l_harvest_duration = time_l_harvest_duration;
-% DLC.FOOD.r_tube_food_str_harvest = r_tube_food_str_harvest;
-% DLC.FOOD.r_tube_food_end_harvest = r_tube_food_end_harvest;
-% DLC.FOOD.l_tube_food_str_harvest = l_tube_food_str_harvest;
-% DLC.FOOD.l_tube_food_end_harvest = l_tube_food_end_harvest;
 DLC.CLASS.is_bout_r = is_bout_r;
 DLC.CLASS.is_harvest_r = is_harvest_r;
 DLC.CLASS.is_bout_l = is_bout_l;
@@ -1765,13 +1857,13 @@ if EXPERIMENT_PARAMS.flag_figure_debug == 1
     xlabel('Time (s)');
     ylabel('Displacement (mm)');
     if ~isempty(time_lick_onset_r_reward)
-        plot(time_lick_onset_r_reward,19,'.c');
+        plot(time_lick_onset_r_reward,19,'.r');
     end
     if ~isempty(time_lick_onset_l_reward)
         plot(time_lick_onset_l_reward,19,'.b');
     end
     yyaxis right
-    plot(time_1K,r_tube_food,'.-c');
+    plot(time_1K,r_tube_food,'.-r');
     plot(time_1K,l_tube_food,'.-b');
     ylabel('Reward capacity (0:Empty | 1:Full)')
     title([ EXPERIMENT_PARAMS.file_name ': Harvest | ' num2str(sum(DLC.CLASS.is_bout_l)) ' left bouts | ' num2str(sum(DLC.CLASS.is_bout_r)) ' right bouts'], 'interpreter', 'none');

@@ -269,7 +269,7 @@ EPHYS.Neural_Properties.Corr_data_CS_CSxSS_AUTO    = nanmean(EPHYS.CH_sorted.Cor
 %      'rtube_l_px', 'rtube_l_py', 'ltube_r_px', 'ltube_r_py', 'ltube_l_px', 'ltube_l_py', 'rew_capacity_r', 'rew_capacity_l' });
 
 BEHAVE.LICKS_ALL_DATA = rmfield(BEHAVE.LICKS_ALL_DATA, {'time_1K_stream', 'tongue_dm_stream', 'tongue_vm_stream', ...
-    'tongue_ang_stream', 'tongue_dm', 'tongue_vm', 'tongue_ang', 'rew_capacity_r', 'rew_capacity_l' });
+    'tongue_ang_stream', 'tongue_dm', 'tongue_vm', 'tongue_ang'});
 
 
 % outputs

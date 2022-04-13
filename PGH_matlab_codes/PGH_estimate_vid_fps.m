@@ -21,26 +21,44 @@ path_to_analyzed_figs_tongue = [path_to_raw, '..' filesep 'analyzed_figs', files
 try
     file_name_ = dir([path_to_analyzed_tongue '*_DLC.mp4']);
     file_name = [file_name_(1).name];
-    VID.vid = VideoReader([path_to_analyzed_tongue filesep  file_name]);
-    VID.num_frames = VID.vid.NumFrames;
-
+    file_path = [path_to_analyzed_tongue filesep];
+    VID.vid = VideoReader([file_path file_name]);
     fprintf(['Loading: ', file_name, ' ... ']);
+    num_frames = 0;
+    while hasFrame(VID.vid)
+        num_frames = num_frames + 1;
+        frames{num_frames} = readFrame(VID.vid);
+    end
+    VID.num_frames = num_frames;
 catch
     try
         file_name_ = dir([path_to_raw '*.mp4']);
         file_name = [file_name_(1).name];
-        VID.vid = VideoReader([path_to_raw filesep  file_name]);
-        VID.num_frames = VID.vid.NumFrames;
-        fprintf(['Loading: ', file_name, ' ... ']);      
+        file_path = [path_to_raw filesep];
+        VID.vid = VideoReader([file_path file_name]);
+        fprintf(['Loading: ', file_name, ' ... ']);
+        num_frames = 0;
+        while hasFrame(VID.vid)
+            num_frames = num_frames + 1;
+            frames{num_frames} = readFrame(VID.vid);
+        end
+        VID.num_frames = num_frames;
     catch
         file_name_ = dir([path_to_raw '*.avi']);
         file_name = [file_name_(1).name];
-        VID.vid = VideoReader([path_to_raw filesep  file_name]);
-        VID.num_frames = VID.vid.NumFrames;
+        file_path = [path_to_raw filesep];
+        VID.vid = VideoReader([file_path file_name]);
         fprintf(['Loading: ', file_name, ' ... ']);
+        num_frames = 0;
+        while hasFrame(VID.vid)
+            num_frames = num_frames + 1;
+            frames{num_frames} = readFrame(VID.vid);
+        end
+        VID.num_frames = num_frames;
     end
 end
 
+VID.frames = frames;
 VID.debug_figures = true;
 VID.file_path = path_to_raw;
 VID.file_name = file_name;
@@ -52,8 +70,6 @@ VID.path_to_analyzed_figs_tongue = path_to_analyzed_figs_tongue;
 VID.height = VID.vid.Height;
 VID.width = VID.vid.Width;
 VID.duration = VID.vid.Duration;
-
-
 
 fprintf(' --> Completed. \n')
 
@@ -69,14 +85,14 @@ if auto_find_rect == 1
 else
     fig = figure;
     fig.WindowState = 'maximized';
-    imshow(read(VID.vid, 1));
+    imshow(VID.frames{1});
     rect = getrect;
     close;
 end
 try
     num_frames = VID.num_frames;
     for counter_frame = 1 : num_frames
-        current_frame = read(VID.vid, counter_frame);
+        current_frame = VID.frames{counter_frame};
         x = round(rect(1));y = round(rect(2)); w = round(rect(3));h = round(rect(4));
         mean_r(counter_frame) = round(mean(mean(current_frame(y:y+h, x:x+w, 1))));
         mean_g(counter_frame) = round(mean(mean(current_frame(y:y+h, x:x+w, 2))));
@@ -274,11 +290,11 @@ end
 estimated_FPS_ = fps(ind_xcross_FPS_);
 
 if estimated_FPS_ > 103
-estimated_FPS_ = 100;
+    estimated_FPS_ = 100;
 end
 %% CALCULATE FPS FINE
+% estimated_FPS_ = 100;
 fps = estimated_FPS_ - 3 : 0.001 : estimated_FPS_ +3;
-
 for counter_FPS = 1:length(fps)
     %% Build BEHAVE Alignment events - FPS
     time_reference      = (BEHAVE.time_1K(1) : (1/fps(counter_FPS)) : BEHAVE.time_1K(end))';
@@ -438,8 +454,8 @@ end
 function rect = findrect(VID)
 for i = 1 : VID.num_frames - 1
 
-    frame = read(VID.vid, i);
-    frame_next = read(VID.vid, i+1);
+    frame = VID.frames{i};
+    frame_next = VID.frames{i+1};
 
     rows = [];
     cols = [];
