@@ -289,11 +289,11 @@ end
 [~, ind_xcross_FPS_] = max(max_xcross_all);
 estimated_FPS_ = fps(ind_xcross_FPS_);
 
-if estimated_FPS_ > 103
+if estimated_FPS_ > 103 || estimated_FPS_ < 90
     estimated_FPS_ = 100;
 end
 %% CALCULATE FPS FINE
-% estimated_FPS_ = 100;
+%estimated_FPS_ = 40;
 fps = estimated_FPS_ - 3 : 0.001 : estimated_FPS_ +3;
 for counter_FPS = 1:length(fps)
     %% Build BEHAVE Alignment events - FPS
@@ -448,6 +448,8 @@ height = VID.height;
 width = VID.width;
 duration = VID.duration;
 num_frames = VID.num_frames;
+
+
 end
 
 %% function findrect -  output: [x1, y1, x2, y2, frame of detection]

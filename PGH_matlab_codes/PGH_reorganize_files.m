@@ -14,7 +14,7 @@ mkdir(path_to_sorted_data);
 mkdir(path_to_analyzed_tongue);
 
 % delete folders from old structure
-delete_fig_folders = 0;
+delete_fig_folders = 1;
 if delete_fig_folders == 1
     try
         rmdir([rec_path, 'analyzed_figs'],'s');
@@ -66,6 +66,20 @@ try
     converted_video_file_name = converted_video_file.name;
     converted_video_file_name = converted_video_file_name(1:13);
     movefile([path_to_raw_data, converted_video_file_name '_converted.mp4'],[path_to_raw_data,converted_video_file_name '_.mp4' ]);
+end
+
+% move DLC mp4 and csv file from recording folder to analyzed tongue 
+try
+    DLC_video_file = dir([rec_path,'*_DLC.mp4']);
+    DLC_video_file_name = DLC_video_file.name;
+    DLC_video_file_name = DLC_video_file_name(1:13);
+    movefile([rec_path, DLC_video_file_name '_DLC.mp4'],[path_to_analyzed_tongue,DLC_video_file_name '_DLC.mp4' ]);
+end
+try
+    DLC_csv_file = dir([rec_path,'*_DLC.csv']);
+    DLC_csv_file_name = DLC_csv_file.name;
+    DLC_csv_file_name = DLC_csv_file_name(1:13);
+    movefile([rec_path, DLC_csv_file_name '_DLC.csv'],[path_to_analyzed_tongue,DLC_csv_file_name '_DLC.csv' ]);
 end
 
 % move labeled csv files
@@ -122,7 +136,7 @@ try
 end
 
 % delete existing converted DLC mat file from analyzed tongue
-delete_DLC_mat = 0;
+delete_DLC_mat = 1;
 if delete_DLC_mat == 1
 try
     delete([path_to_analyzed_tongue,'*DLC.mat']);
@@ -140,5 +154,11 @@ if delete_video_metadata == 1
     end
 end
 
+% delete existing files in analyzed eye
+delete_eye_mat = 0;
+if delete_eye_mat == 1
+    try
+        delete([path_to_analyzed_eye,'*.mat']);
+    end
 end
 

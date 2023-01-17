@@ -1,11 +1,7 @@
-function PGH_gif_maker(DLC)
-if nargin<1
-[file_name,file_path] = uigetfile([pwd filesep '*.mat'], 'Select DLC file');
-
-end
-%% load DLC
-fprintf(['Loading ', file_name, ' ... ']);
-load([file_path file_name]);
+function PGH_gif_maker(DLC, n_lick,format)
+%% Build variables
+fprintf('Building variables  ... ');
+% load([file_path file_name]);
 d_tip = DLC.KINEMATIC.d_tip;
 v_tip = DLC.KINEMATIC.v_tip;
 angle_midtip = DLC.KINEMATIC.angle_midtip;
@@ -35,89 +31,121 @@ l_food_x = DLC.POINTS.l_food_x;
 l_food_y = DLC.POINTS.l_food_y;
 d_tip_r_food = sqrt((tip_tongue_x - r_food_x).^2 + (tip_tongue_y - r_food_y).^2);
 d_tip_l_food = sqrt((tip_tongue_x - l_food_x).^2 + (tip_tongue_y - l_food_y).^2);
-num_lick = DLC.IND.num_lick;
+% num_lick = DLC.IND.num_lick;
 ind_lick_onset = DLC.IND.ind_lick_onset;
 ind_lick_offset = DLC.IND.ind_lick_offset;
+time_1K = DLC.TIME.time_1K;
 
-fprintf(' --> Completed. \n')
-
-%% Load video
-[file_name,file_path] = uigetfile([pwd filesep '*.mp4'], 'Select MP4 file');
-fprintf(['Loading ', file_name, ' ... ']);
-fprintf(' --> Completed. \n')
-
-%% Specify lick #
-n_lick = input('Specify lick #: ');
 if length(n_lick) > 1
-inds_ = ind_lick_onset(n_lick(1))-1:ind_lick_offset(n_lick(end)) +1;
-inds_v = ind_lick_onset(n_lick(1)):ind_lick_offset(n_lick(end)) +2;
+    inds_ = ind_lick_onset(n_lick(1))-1:ind_lick_offset(n_lick(end)) +1;
+    inds_v = ind_lick_onset(n_lick(1))-2:ind_lick_offset(n_lick(end)) +2;
 
 else
-inds_ = ind_lick_onset(n_lick)-1:ind_lick_offset(n_lick) +1;
-inds_v = ind_lick_onset(n_lick):ind_lick_offset(n_lick) +2;
+    inds_ = ind_lick_onset(n_lick)-1:ind_lick_offset(n_lick) +1;
+    inds_v = ind_lick_onset(n_lick)-2:ind_lick_offset(n_lick) +2;
 
 end
-x_lim = (time_vid(inds_(end)) - time_vid(inds_(1)))*1000;
+
+x_lim = (time_1K(inds_(end)) - time_1K(inds_(1)))*1000;
 fprintf(' --> Completed. \n')
 
-%% Grab frames from video
-fprintf('Grabbing frames  ... ');
+%% Build gif images
+fprintf('Building gif images  ... ');
+path_to_analyzed = DLC.FILE.path_to_analyzed;
+path_to_raw = 'D:\data_59d\2021-02\2021-02-03\2021-02-03_15-11-06\raw_data\';
+
+vid = dir([path_to_analyzed '*.mp4']);
+% vid_name = vid.name;
+vid_name = vid.name(1:13);
+fig = figure;
 for counter_frame = 1:length(inds_)
-    frame = imshow(read(VideoReader(file_name), inds_(counter_frame)));
-    saveas(frame, ['Vid_' num2str(counter_frame)], 'png');
-    close(gcf);
-end
-fprintf(' --> Completed. \n')
+    subplot(3,3,1) % video
+%      frame = imshow(read(VideoReader([path_to_analyzed vid_name]), inds_(counter_frame)));
+    frame = imshow(read(VideoReader([path_to_raw vid_name '.mp4']), inds_(counter_frame)));
 
-%% Grab frames from geo
-fprintf('Geometrizing tongue ...');
-for counter_frame = 1:1:length(inds_)   
+    title('Video frame')
+
+    subplot(3,3,2) % trace
+    hold on
+    line([r_tube_r_x(inds_(counter_frame)) r_tube_r_x(inds_(counter_frame))] ...
+        ,[r_tube_r_y(inds_(counter_frame)) 20], 'Color', 'black');
+    line([r_tube_l_x(inds_(counter_frame)) r_tube_l_x(inds_(counter_frame))] ...
+        ,[r_tube_l_y(inds_(counter_frame)) 20], 'Color', 'black');
+    line([r_tube_r_x(inds_(counter_frame)) r_tube_l_x(inds_(counter_frame))] ...
+        , [r_tube_r_y(inds_(counter_frame)) r_tube_l_y(inds_(counter_frame))], 'Color', 'black');
+    line([l_tube_r_x(inds_(counter_frame)) l_tube_r_x(inds_(counter_frame))] ...
+        ,[-20 l_tube_r_y(inds_(counter_frame))], 'Color', 'black');
+    line([l_tube_l_x(inds_(counter_frame)) l_tube_l_x(inds_(counter_frame))] ...
+        ,[-20 l_tube_l_y(inds_(counter_frame))], 'Color', 'black');
+    line([l_tube_r_x(inds_(counter_frame)) l_tube_l_x(inds_(counter_frame))] ...
+        , [l_tube_r_y(inds_(counter_frame)) l_tube_l_y(inds_(counter_frame))], 'Color', 'black');
+
+    plot(tip_tongue_x(inds_(1):inds_(counter_frame)),tip_tongue_y(inds_(1):inds_(counter_frame)),'.-k', 'Linewidth', 1);
+%     plot(mid_tongue_x(inds_(1):inds_(counter_frame)),mid_tongue_y(inds_(1):inds_(counter_frame)),'.-g', 'Linewidth', 1);
+%     plot(r_tongue_x(inds_(1):inds_(counter_frame)),r_tongue_y(inds_(1):inds_(counter_frame)),'.-r', 'Linewidth', 1);
+%     plot(l_tongue_x(inds_(1):inds_(counter_frame)),l_tongue_y(inds_(1):inds_(counter_frame)),'.-b', 'Linewidth', 1);
+    plot(r_tube_r_x(inds_(counter_frame)),r_tube_r_y(inds_(counter_frame)),'sk','markersize', 5);
+    plot(r_tube_l_x(inds_(counter_frame)),r_tube_l_y(inds_(counter_frame)),'sk','markersize', 5);
+    plot(l_tube_r_x(inds_(counter_frame)),l_tube_r_y(inds_(counter_frame)),'sk','markersize', 5);
+    plot(l_tube_l_x(inds_(counter_frame)),l_tube_l_y(inds_(counter_frame)),'sk','markersize', 5);
+    plot(r_nose_x(inds_(counter_frame)),r_nose_y(inds_(counter_frame)),'ok','markersize', 5);
+    plot(l_nose_x(inds_(counter_frame)),l_nose_y(inds_(counter_frame)),'ok','markersize', 5);
+    plot(r_food_x(inds_(counter_frame)),r_food_y(inds_(counter_frame)),'oy','markersize', 5);
+    plot(l_food_x(inds_(counter_frame)),l_food_y(inds_(counter_frame)),'oy','markersize', 5);
+
+    xlabel('x (mm)');
+    ylabel('y (mm)');
+    set(gca, 'YDir','reverse')
+    xlim([-10 20])
+    ylim([-25 25])
+    title('Trajectory trace')
+
+    subplot(3,3,3) % geo
     geo_tongue = polyshape([tip_tongue_x(inds_(counter_frame)),l_tongue_x(inds_(counter_frame)),...
         mid_tongue_x(inds_(counter_frame)),r_tongue_x(inds_(counter_frame))],[tip_tongue_y(inds_(counter_frame)),...
         l_tongue_y(inds_(counter_frame)),mid_tongue_y(inds_(counter_frame)),r_tongue_y(inds_(counter_frame))]);
-    
+
     geo_r_tube_empty = polyshape([r_food_x(inds_(counter_frame)),r_tube_r_x(inds_(counter_frame)),...
         r_tube_r_x(inds_(counter_frame)),r_tube_l_x(inds_(counter_frame)), r_tube_l_x(inds_(counter_frame))],[r_food_y(inds_(counter_frame)),...
         r_food_y(inds_(counter_frame)), r_tube_r_y(inds_(counter_frame)),r_tube_l_y(inds_(counter_frame)), r_food_y(inds_(counter_frame))]);
-    
+
     geo_r_tube_full = polyshape([r_tube_r_x(inds_(counter_frame)), r_tube_r_x(inds_(counter_frame)),...
         r_tube_l_x(inds_(counter_frame)), r_tube_l_x(inds_(counter_frame)), r_food_x(inds_(counter_frame))],...
         [r_food_y(inds_(counter_frame)), r_tube_r_y(inds_(counter_frame)) + abs(max(r_food_y)-min(r_food_y)), ...
         r_tube_l_y(inds_(counter_frame)) + abs(max(r_food_y)-min(r_food_y)), r_food_y(inds_(counter_frame)), r_food_y(inds_(counter_frame))]);
-    
+
     geo_l_tube_empty = polyshape([l_food_x(inds_(counter_frame)),l_tube_r_x(inds_(counter_frame)),...
         l_tube_r_x(inds_(counter_frame)),l_tube_l_x(inds_(counter_frame)), l_tube_l_x(inds_(counter_frame))],[l_food_y(inds_(counter_frame)),...
         l_food_y(inds_(counter_frame)), l_tube_r_y(inds_(counter_frame)),l_tube_l_y(inds_(counter_frame)), l_food_y(inds_(counter_frame))]);
-    
+
     geo_l_tube_full = polyshape([l_tube_r_x(inds_(counter_frame)), l_tube_r_x(inds_(counter_frame)),...
         l_tube_l_x(inds_(counter_frame)), l_tube_l_x(inds_(counter_frame)), l_food_x(inds_(counter_frame))],...
         [l_food_y(inds_(counter_frame)), l_tube_r_y(inds_(counter_frame)) - abs(max(l_food_y)-min(l_food_y)), ...
         l_tube_l_y(inds_(counter_frame)) - abs(max(l_food_y)-min(l_food_y)), l_food_y(inds_(counter_frame)), l_food_y(inds_(counter_frame))]);
-    
     geo_inter_tongue_r_tube_empty = intersect(geo_tongue, geo_r_tube_empty);
-    
+
     geo_inter_tongue_r_tube_full = intersect(geo_tongue, geo_r_tube_full);
-    
+
     geo_inter_tongue_l_tube_empty = intersect(geo_tongue, geo_l_tube_empty);
-    
+
     geo_inter_tongue_l_tube_full = intersect(geo_tongue, geo_l_tube_full);
-    
+
     geo_all = [geo_tongue geo_r_tube_empty geo_r_tube_full geo_l_tube_empty geo_l_tube_full...
         geo_inter_tongue_r_tube_empty geo_inter_tongue_r_tube_full geo_inter_tongue_l_tube_empty...
         geo_inter_tongue_l_tube_full ];
-    
+
     [cent_tongue_r_tube_empty_x, cent_tongue_r_tube_empty_y ] = centroid(geo_inter_tongue_r_tube_empty);
     [cent_tongue_r_tube_full_x, cent_tongue_r_tube_full_y] = centroid(geo_inter_tongue_r_tube_full);
     [cent_tongue_l_tube_empty_x,cent_tongue_l_tube_empty_y]  = centroid(geo_inter_tongue_l_tube_empty);
     [cent_tongue_l_tube_full_x,cent_tongue_l_tube_full_y] = centroid(geo_inter_tongue_l_tube_full);
-    
+
     bool_overlaps_all = overlaps(geo_all);
     bool_tongue_r_tube_empty = bool_overlaps_all(1,2);
     bool_tongue_r_tube_full = bool_overlaps_all(1,3);
     bool_tongue_l_tube_empty= bool_overlaps_all(1,4);
     bool_tongue_l_tube_full = bool_overlaps_all(1,5);
-    
-    area_tongue = area(geo_tongue);
+
+    area_tongue(counter_frame) = area(geo_tongue);
     area_r_tube_empty = area(geo_r_tube_empty);
     area_r_tube_full = area(geo_r_tube_full);
     area_l_tube_empty = area(geo_l_tube_empty);
@@ -126,9 +154,8 @@ for counter_frame = 1:1:length(inds_)
     area_inter_tongue_r_tube_full = area(geo_inter_tongue_r_tube_full);
     area_inter_tongue_l_tube_empty = area(geo_inter_tongue_l_tube_empty);
     area_inter_tongue_l_tube_full = area(geo_inter_tongue_l_tube_full);
-    
-    figure;
-    hold on;
+
+    hold on
     plot(geo_tongue,'LineWidth', 1, 'FaceColor','red');
     plot(geo_r_tube_empty,'LineWidth', 1, 'FaceColor','white');
     plot(geo_l_tube_empty,'LineWidth', 1, 'FaceColor','white');
@@ -142,100 +169,75 @@ for counter_frame = 1:1:length(inds_)
     plot(cent_tongue_r_tube_full_x, cent_tongue_r_tube_full_y,'*m','markersize', 7);
     plot(cent_tongue_l_tube_empty_x, cent_tongue_l_tube_empty_y,'*m','markersize', 7);
     plot(cent_tongue_l_tube_full_x, cent_tongue_l_tube_full_y,'*m','markersize', 7);
-    plot(tip_tongue_x(inds_(counter_frame)),tip_tongue_y(inds_(counter_frame)),'or','markersize', 7);
-    plot(r_tongue_x(inds_(counter_frame)),r_tongue_y(inds_(counter_frame)),'oc','markersize', 7);
-    plot(l_tongue_x(inds_(counter_frame)),l_tongue_y(inds_(counter_frame)),'og','markersize', 7);
-    plot(mid_tongue_x(inds_(counter_frame)),mid_tongue_y(inds_(counter_frame)),'ob','markersize', 7);
+    plot(tip_tongue_x(inds_(counter_frame)),tip_tongue_y(inds_(counter_frame)),'ok','markersize', 7);
+    plot(r_tongue_x(inds_(counter_frame)),r_tongue_y(inds_(counter_frame)),'or','markersize', 7);
+    plot(l_tongue_x(inds_(counter_frame)),l_tongue_y(inds_(counter_frame)),'ob','markersize', 7);
+    plot(mid_tongue_x(inds_(counter_frame)),mid_tongue_y(inds_(counter_frame)),'og','markersize', 7);
     plot(r_nose_x(inds_(counter_frame)),r_nose_y(inds_(counter_frame)),'ok','markersize', 5);
     plot(l_nose_x(inds_(counter_frame)),l_nose_y(inds_(counter_frame)),'ok','markersize', 5);
     xlabel('x (mm)');
     ylabel('y (mm)');
     xlim([-10 20])
-    ylim([-20 20])
-    
+    ylim([-25 25])
     set(gca, 'YDir','reverse');
-    saveas(gcf, ['Geo_' num2str(counter_frame)], 'png');
-    close(gcf);
-end
-fprintf(' --> Completed. \n')
+    title('Geometrized frame')
 
-%% Grab traces from DLC
-for counter_frame = 1:1:length(inds_)
-    figure;
-    hold on;
-    plot(tip_tongue_x(inds_(1):inds_(counter_frame)),tip_tongue_y(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
-    plot(mid_tongue_x(inds_(1):inds_(counter_frame)),mid_tongue_y(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
-    plot(r_tongue_x(inds_(1):inds_(counter_frame)),r_tongue_y(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
-    plot(l_tongue_x(inds_(1):inds_(counter_frame)),l_tongue_y(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
-    plot(r_tube_r_x(inds_(counter_frame)),r_tube_r_y(inds_(counter_frame)),'sk','markersize', 5);
-    plot(r_tube_l_x(inds_(counter_frame)),r_tube_l_y(inds_(counter_frame)),'sk','markersize', 5);
-    plot(l_tube_r_x(inds_(counter_frame)),l_tube_r_y(inds_(counter_frame)),'sk','markersize', 5);
-    plot(l_tube_l_x(inds_(counter_frame)),l_tube_l_y(inds_(counter_frame)),'sk','markersize', 5);
-    plot(r_nose_x(inds_(counter_frame)),r_nose_y(inds_(counter_frame)),'ok','markersize', 5);
-    plot(l_nose_x(inds_(counter_frame)),l_nose_y(inds_(counter_frame)),'ok','markersize', 5);
-    xlabel('x (mm)');
-    ylabel('y (mm)');
-    set(gca, 'YDir','reverse')
-    xlim([-10 20])
-    ylim([-20 20])
-    saveas(gcf, ['Trace_' num2str(counter_frame)], 'png');
-    close(gcf);
-end
-
-%% Grab distance from DLC
-for counter_frame = 1:1:length(inds_)  
-    figure;
-    hold on;
-    plot((time_vid(inds_(1):inds_(counter_frame)) - time_vid(inds_(1)))*1000, d_tip(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
+    subplot(3,3,4) % displacement
+    plot((time_1K(inds_(1):inds_(counter_frame)) - time_1K(inds_(1)))*1000, d_tip(inds_(1):inds_(counter_frame)),'.-k', 'Linewidth', 1);
     xlabel('Time (ms)');
     ylabel('Displacement (mm)');
     ylim([0 25])
     xlim([0 x_lim])
-    saveas(gcf, ['Displacement_' num2str(counter_frame)], 'png');
-        close(gcf);
+    title('Displacement')
 
-end
-
-%% Grab velocity from DLC
-
-for counter_frame = 1:1:length(inds_v)   
-    figure;
-    hold on;
-    plot((time_vid(inds_v(1):inds_v(counter_frame)) - time_vid(inds_v(1)))*1000, v_tip(inds_v(1):inds_v(counter_frame)),'.-', 'Linewidth', 0.8);
+    subplot(3,3,5) % velocity
+    plot((time_1K(inds_v(1):inds_v(counter_frame)) - time_1K(inds_v(1)))*1000, v_tip(inds_v(1):inds_v(counter_frame)),'.-k', 'Linewidth', 1);
     xlabel('Time (ms)');
     ylabel('Velocity (mms)');
-    ylim([-600 600])
+    ylim([-650 650])
     xlim([0 x_lim])
-    saveas(gcf, ['Velocity_' num2str(counter_frame)], 'png');
-        close(gcf);
+    title('Velocity')
 
-end
-
-%% Grab distance_food from DLC
-for counter_frame = 1:1:length(inds_)
-    figure;
-    hold on;
-    plot((time_vid(inds_(1):inds_(counter_frame)) - time_vid(inds_(1)))*1000, d_tip_l_food(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
-    xlabel('Time (ms)');
-    ylabel('Distance (mm)');
-    ylim([0 25])
-    xlim([0 x_lim])
-    saveas(gcf, ['Food_' num2str(counter_frame)], 'png');
-        close(gcf);
-
-end
-
-%% Grab angle of lick
-for counter_frame = 1:1:length(inds_)
-    figure;
-    hold on;
-    plot((time_vid(inds_(1):inds_(counter_frame)) - time_vid(inds_(1)))*1000, angle_midtip(inds_(1):inds_(counter_frame)),'.-', 'Linewidth', 0.8);
+    subplot(3,3,6) % angle
+    plot((time_1K(inds_(1):inds_(counter_frame)) - time_1K(inds_(1)))*1000, angle_midtip(inds_(1):inds_(counter_frame)),'.-k', 'Linewidth', 1);
     xlabel('Time (ms)');
     ylabel('Angle (deg)');
-    ylim([-100 100])
+    ylim([-120 120])
     xlim([0 x_lim])
-    saveas(gcf, ['Angle_' num2str(counter_frame)], 'png');
-    close(gcf);
+    title('Angle')
 
+    subplot(3,3,7) % distance from left tube
+    plot((time_1K(inds_(1):inds_(counter_frame)) - time_1K(inds_(1)))*1000, d_tip_l_food(inds_(1):inds_(counter_frame)),'.-k', 'Linewidth', 1);
+    xlabel('Time (ms)');
+    ylabel('Distance (mm)');
+    ylim([0 50])
+    xlim([0 x_lim])
+    title('Distance to left food')
+
+    subplot(3,3,8) % distance from right tube
+    plot((time_1K(inds_(1):inds_(counter_frame)) - time_1K(inds_(1)))*1000, d_tip_r_food(inds_(1):inds_(counter_frame)),'.-k', 'Linewidth', 1);
+    xlabel('Time (ms)');
+    ylabel('Distance (mm)');
+    ylim([0 50])
+    xlim([0 x_lim])
+    title('Distance to right food')
+
+    subplot(3,3,9) % tongue area
+    plot((time_1K(inds_(1):inds_(counter_frame)) - time_1K(inds_(1)))*1000, area_tongue(1 : counter_frame),'.-k', 'Linewidth', 1);
+    xlabel('Time (ms)');
+    ylabel('area (mm^s)');
+    ylim([0 30])
+    xlim([0 x_lim])
+    title('Tongue area')
+
+    sgtitle([vid_name(1:13) ' | lick: ' num2str(n_lick(1)) ' - ' num2str(n_lick(end)) ], 'interpret', 'none');
+
+    ESN_Beautify_Plot(fig,[10 8])
+    saveas(frame, ['Frame_' num2str(counter_frame)], format);
+    %     close(gcf);
+    clf
 end
+fprintf(' --> Completed. \n')
+
+
 end

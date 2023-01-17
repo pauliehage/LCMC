@@ -82,7 +82,6 @@ end
 EPHYS.CH_EVE.EPHYS_CS_train_1K = EPHYS_CS_train_1K;
 EPHYS.CH_EVE.EPHYS_SS_train_1K = EPHYS_SS_train_1K;
 
-
 % extract alignment
 clearvars -except EPHYS BEHAVE type params funcs
 
@@ -94,7 +93,6 @@ event_type_list       = {'onset', 'vmax', 'dmax', 'vmin', 'offset'};
 
 length_trace = params.lick.length_trace;
 inds_span    = params.lick.inds_span;
-
 
 if isempty(data_type_tongue_list)
     fprintf('><ERROR><: Global variables are empty.\n');
@@ -268,9 +266,7 @@ EPHYS.Neural_Properties.Corr_data_CS_CSxSS_AUTO    = nanmean(EPHYS.CH_sorted.Cor
 %      'nose_l_px', 'nose_l_py', 'rew_r_px', 'rew_r_py', 'rew_l_px', 'rew_l_py', 'rtube_r_px', 'rtube_r_py', ...
 %      'rtube_l_px', 'rtube_l_py', 'ltube_r_px', 'ltube_r_py', 'ltube_l_px', 'ltube_l_py', 'rew_capacity_r', 'rew_capacity_l' });
 
-BEHAVE.LICKS_ALL_DATA = rmfield(BEHAVE.LICKS_ALL_DATA, {'time_1K_stream', 'tongue_dm_stream', 'tongue_vm_stream', ...
-    'tongue_ang_stream', 'tongue_dm', 'tongue_vm', 'tongue_ang'});
-
+BEHAVE.LICKS_ALL_DATA = rmfield(BEHAVE.LICKS_ALL_DATA, {'time_1K_stream', 'tongue_dm_stream', 'tongue_vm_stream', 'tongue_ang_stream'});
 
 % outputs
 LICKS_ALL_DATA = BEHAVE.LICKS_ALL_DATA;

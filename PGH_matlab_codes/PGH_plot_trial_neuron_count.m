@@ -1,12 +1,16 @@
 %% MASTER FUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% function MAF_single_unit_analysis
-function PGH_plot_trial_neuron_count
+function PGH_plot_trial_neuron_count(monkey_id)
 %% Params
 clc; clear; close all;
 tic;
 
-path_data_monkey_sorted = 'data_59d';
+if nargin < 1
+    path_data_monkey_sorted = input('Monkey id (data_59d or data_125d): ');
+else
+    path_data_monkey_sorted = monkey_id;
+end
 
 session_list = {'all'};
 

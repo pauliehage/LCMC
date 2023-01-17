@@ -40,8 +40,8 @@ lick_data.tongue_ang_bin = 6 - discretize(lick_data.tongue_ang_max, ang_edges);
 if length(ang_values) ~= 5
     error('plot_single_session_modulation: length ang_values is not 5. Please modify the code.')
 end
-if length_trace ~= 500
-    error('lick_modulation_index: length_trace is not 500. Please modify the code.')
+if length_trace ~= 2000
+    error('lick_modulation_index: length_trace is not 2000. Please modify the code.')
 end
 field_names_lick_data = fieldnames(lick_data);
 lick_data_dir = struct;
