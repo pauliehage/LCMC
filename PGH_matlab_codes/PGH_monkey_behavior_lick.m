@@ -87,7 +87,7 @@ fprintf([num2str(EXPERIMENT_PARAMS.FPS) ' --> Completed. \n'])
 %% Analyze DLC data
 fprintf(['Analyzing: ' EXPERIMENT_PARAMS.mat_FileName '\n'])
 clearvars -except DLC EXPERIMENT_PARAMS LICKS_ALL_DATA flag_figure params funcs;
-flag_qa = 0;
+flag_qa = 1;
 if flag_qa == 1
     [DLC,EXPERIMENT_PARAMS] = quality_assurance(DLC,EXPERIMENT_PARAMS);
 end
@@ -107,7 +107,7 @@ function [DLC,EXPERIMENT_PARAMS] = analyze(DLC,EXPERIMENT_PARAMS, params, funcs)
 [DLC,EXPERIMENT_PARAMS] = quantify_food(DLC,EXPERIMENT_PARAMS, params, funcs);
 [DLC,EXPERIMENT_PARAMS] = detect_harvest(DLC,EXPERIMENT_PARAMS, params, funcs);
 %PGH_gif_maker(DLC,562,'png');
-PGH_plot_sample_trace(DLC);
+%PGH_plot_sample_trace(DLC);
 %PGH_plot_lick_sorter_averages(DLC,'pdf','r')
 end
 
@@ -543,7 +543,11 @@ d_tip = movmean(sqrt(tip_tongue_x.^2 + tip_tongue_y.^2),smooth_window)';
 is_del = isoutlier(peak_neg);
 peak_neg(is_del) = [];
 ind_peak_neg(is_del) = [];
-d_tip_neg_interp = interp1(ind_peak_neg,peak_neg,1: length(d_tip));
+if length(ind_peak_neg) > 1
+    d_tip_neg_interp = interp1(ind_peak_neg,peak_neg,1:length(d_tip));
+else
+    d_tip_neg_interp = zeros(1,length(d_tip));
+end
 d_tip = d_tip + d_tip_neg_interp;
 d_tip(d_tip < 0) = 0;
 d_tip(isnan(d_tip)) = 0;
@@ -720,7 +724,7 @@ time_lick_onset = DLC.TIME.time_lick_onset;
 % build kinematicks _lick
 for counter_lick =  1 : 1 : num_lick
     inds_ = (ind_lick_onset(counter_lick) ) : ind_lick_offset(counter_lick);
-    if length(inds_) > 500
+    if length(inds_) >= 500
         inds_ = inds_(1:500);
         pad = [];
     elseif length(inds_) < 500
@@ -909,11 +913,13 @@ for counter_lick =  1 : 1 : num_lick
 end
 
 % ILI bout
+if num_bout > 0
 for counter_bout = 1 : 1 : num_bout
     ILI_bout(counter_bout,1) = mean(diff(time_lick_onset(find(ind_lick_onset >= ind_lick_onset_str_bout(counter_bout) & ind_lick_onset <= ind_lick_onset_end_bout(counter_bout)))));
 end
-
-
+else
+ILI_bout = nan;
+end
 
 v_tip = ([0 (diff(d_tip)./ (time_1K(2) - time_1K(1)))]);
 angle_midtip = rad2deg(atan2(midtip_y, midtip_x))';
@@ -1578,6 +1584,15 @@ for counter_bout =  1 : 1 : num_bout
     end
 end
 
+% if no bouts
+if num_bout == 0
+r_tube_food_bout_start = r_tube_food_(1);
+r_tube_food_bout_end = r_tube_food_(end);
+l_tube_food_bout_start = l_tube_food_(1);
+l_tube_food_bout_end = l_tube_food_(end);
+
+end
+
 DLC.FOOD.r_tube_food = r_tube_food;
 DLC.FOOD.r_food_x = r_food_x;
 DLC.FOOD.r_food_y = r_food_y;
@@ -1665,9 +1680,16 @@ end
 % ind_lick_onset_end_harvest_grooming = ismember(ind_lick_onset_end_harvest, ind_lick_onset_grooming);
 
 % Count number of licks in harvest
-for counter_harvest = 1 : length(ind_lick_onset_str_harvest)
-    inds_ = ind_lick_onset_str_harvest(counter_harvest) : ind_lick_onset_end_harvest(counter_harvest);
-    num_lick_harvest(counter_harvest,1) = length(find(inds_ == ind_lick_onset));
+if DLC.IND.num_bout > 0
+    for counter_harvest = 1 : length(ind_lick_onset_str_harvest)
+        inds_ = ind_lick_onset_str_harvest(counter_harvest) : ind_lick_onset_end_harvest(counter_harvest);
+        num_lick_harvest(counter_harvest,1) = length(find(inds_ == ind_lick_onset));
+    end
+else
+    num_lick_harvest = [];
+    ind_lick_onset_str_harvest = [];
+    ind_lick_onset_end_harvest = [];
+    validity = [];
 end
 
 validity = num_lick_harvest>=3;

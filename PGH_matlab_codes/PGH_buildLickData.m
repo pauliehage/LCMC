@@ -52,4 +52,5 @@ for counter_dir = 1 : length(ang_values)
         lick_data_dir(counter_dir).(field_name) = lick_data.(field_name)(:,idx_ang);
     end
 end
+lick_data_dir = rmfield(lick_data_dir,'tongue_ang_bin');
 end

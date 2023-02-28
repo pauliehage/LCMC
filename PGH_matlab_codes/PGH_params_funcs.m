@@ -42,7 +42,7 @@ params.lick.vel_step    = 150;
 params.lick.vel_edges    = 0 : params.lick.vel_step : 750;
 params.lick.dur_step = 50;
 params.lick.dur_edges = 0 : params.lick.dur_step : 500;
-params.lick.tags_CS_ang_avg  = [1:5];
+params.lick.tags_CS_ang_avg  = [1:7];
 params.lick.tag_name_list = {  ...
     'groom', ... % tag 1
     'inner_tube_success', ... % tag 2

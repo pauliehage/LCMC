@@ -1,6 +1,6 @@
 % AUTHORS:
 %   Paul Hage and Lucas S. Mandacaru Guerra
-function [pupil_area, validity] = filter_pupil(pupil_area_raw,measurement_time,counter_session,path)
+function [pupil_area] = filter_pupil(pupil_area_raw,measurement_time,counter_session,path)
 pupil_area = pupil_area_raw;
 % cap negative values at 0
 pupil_area(pupil_area<0) = 0;
@@ -54,11 +54,9 @@ for counter_peak = 1 : length(ind_peak)
         pupil_area(inds_nan) = nan;
     end
 end
+% sum(isnan(pupil_area_paul))/length(pupil_area_paul)
+% sum(isnan(pupil_area))/length(pupil_area)
 
-% build validity
-validity = ones(length(pupil_area)); validity(isnan(pupil_area)) = 0;
-
-% compare raw vs filtered pupil signal
 plot_check = 1;
 if plot_check == 1
     figure

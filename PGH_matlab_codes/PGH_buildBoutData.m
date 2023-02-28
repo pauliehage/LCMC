@@ -1,10 +1,10 @@
 %% function buildBoutData
 function bout_data_dir = PGH_buildBoutData(LICKS_ALL_DATA, alignment, params, funcs)
 
-tag_id = 1:3;
-
 if strcmp(alignment,'offset')
-    tag_id = tag_id + 3;
+    tag_id = 2;
+else
+    tag_id = 1;
 end
 
 % Build lick_data
@@ -33,16 +33,27 @@ bout_data.time_diff_onset_offset = bout_data.time_offset - bout_data.time_onset;
 bout_data.time_diff_onset_dmax   = bout_data.time_dmax - bout_data.time_onset;
 bout_data.time_diff_offset_dmax  = bout_data.time_offset - bout_data.time_onset;
 
-idx_bout_ = LICKS_ALL_DATA.tag_bout(LICKS_ALL_DATA.tag_bout ~= 0);
-idx_bout_ = idx_bout_(ismember(idx_bout_, tag_id)) ;
+% determine if left or right bout
+ind_bout_str = find(LICKS_ALL_DATA.tag_bout == 1);
+ind_bout_end = find(LICKS_ALL_DATA.tag_bout == 2);
+bout_dir = ones(1,numel(ind_bout_str)); % 1 groom 2 left, 3 right
+for counter_bout = 1 : sum(idx_bout)
+    inds = ind_bout_str(counter_bout) : ind_bout_end(counter_bout);
+    if sum(LICKS_ALL_DATA.tongue_ang_max(inds) > 0) > sum(LICKS_ALL_DATA.tongue_ang_max(inds) < 0)
+        bout_dir(1,counter_bout) = 3;
+    elseif sum(LICKS_ALL_DATA.tongue_ang_max(inds) > 0) < sum(LICKS_ALL_DATA.tongue_ang_max(inds) < 0)
+        bout_dir(1,counter_bout) = 2;
+    else
+        bout_dir(1,counter_bout) = 1;
+    end
+end
 
 field_names_bout_data = fieldnames(bout_data);
 bout_data_dir = struct;
-for counter_dir = 1 : length(tag_id)
+for counter_dir = 1 : 3
     for counter_field = 1 : length(field_names_bout_data)
         field_name = field_names_bout_data{counter_field};
-        idx_tag = (idx_bout_ == counter_dir);
-        bout_data_dir(counter_dir).(field_name) = bout_data.(field_name)(:,idx_tag);
+        bout_data_dir(counter_dir).(field_name) = bout_data.(field_name)(:,bout_dir==counter_dir);
     end
 end
 
